@@ -1,6 +1,8 @@
 ﻿using API.Data;
 using API.Dtos;
 using API.Entities;
+using API.Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
@@ -8,16 +10,19 @@ using System.Text;
 
 namespace API.Controllers
 {
+    [AllowAnonymous]
     public class AccountController: BaseAPIController
     {
         private readonly DataContext _context;
-        public AccountController(DataContext context)
+        private readonly ITokenService _tokenService;
+        public AccountController(DataContext context, ITokenService tokenService)
         {
             _context = context;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
-        public async Task<ActionResult<AppUser>> Register(Registerdto registerdto)
+        public async Task<ActionResult<UserDto>> Register(Registerdto registerdto)
         {
             var userExists = await UserExists(registerdto.Username);
             if (userExists)
@@ -34,11 +39,16 @@ namespace API.Controllers
 
             _context.Users.Add(user);
             await _context.SaveChangesAsync();
-            return Ok(user);
+            var tokenStr = _tokenService.CreateToken(user);
+            return Ok(new UserDto
+            {
+                Username = user.UserName,
+                Token = tokenStr
+            });
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<AppUser>> Login(Logindto logindto)
+        public async Task<ActionResult<UserDto>> Login(Logindto logindto)
         {
             var user = _context.Users.SingleOrDefault(x => x.UserName == logindto.Username);
             if (user == null)
@@ -54,8 +64,12 @@ namespace API.Controllers
             {
                 return Unauthorized("Invalid Password");
             }
-
-            return Ok(user);
+            var tokenStr = _tokenService.CreateToken(user);
+            return Ok(new UserDto
+            {
+                Username = user.UserName,
+                Token = tokenStr
+            });
 
         }
 
