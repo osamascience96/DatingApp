@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AccountService } from '../services/account.service';
-import { Observable, of } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 import { User } from '../models/user';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
@@ -13,6 +13,7 @@ import { ToastrService } from 'ngx-toastr';
 export class NavComponent implements OnInit{
 
   model: any = {}
+  currentUser: any;
   loggedInObservable: Observable<User | null> = of(null);
 
   constructor(
@@ -41,6 +42,11 @@ export class NavComponent implements OnInit{
 
   SetLoggedInObservable = () => {
     this.loggedInObservable = this.accountService.currentUser$;
+    this.loggedInObservable.subscribe(
+      (user: User | null) => {
+        this.currentUser = user;
+      }
+    )
   }
 
   logout() {
