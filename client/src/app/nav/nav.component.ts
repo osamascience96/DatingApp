@@ -33,10 +33,7 @@ export class NavComponent implements OnInit{
         next: (response) => {
           this.router.navigateByUrl('/members');
           this.SetLoggedInObservable();
-        },
-        error: (error) => {
-          this.toastr.error(error?.error);
-        } 
+        }
     })
   }
 
